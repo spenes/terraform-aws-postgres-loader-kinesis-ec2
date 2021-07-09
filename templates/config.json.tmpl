@@ -1,0 +1,33 @@
+{
+  "input": {
+    "type": "Kinesis"
+    "appName": "${app_name}"
+    "streamName": "${in_stream_name}"
+    "region": "${region}"
+    "initialPosition": "${initial_position}"
+
+    "retrievalMode": {
+      "type": "Polling"
+      "maxRecords": 10000
+    }
+  }
+
+  "output": {
+    "type": "Postgres"
+    "host": "${db_host}"
+    "port": ${db_port}
+    "database": "${db_name}"
+    "username": "${db_username}"
+    "password": "${db_password}"
+    "schema": "${schema_name}"
+    "sslMode": "REQUIRE"
+  }
+
+  "purpose": "${purpose}"
+
+  "monitoring": {
+    "metrics": {
+      "cloudWatch": false
+    }
+  }
+}
