@@ -1,3 +1,10 @@
+Version 0.1.1 (2021-08-12)
+--------------------------
+Update License badge to use HTTPS (#1)
+Add Terraform Registry badge (#2)
+Add badge for source application repository (#3)
+Add support for CloudWatch logs (#4)
+
 Version 0.1.0 (2021-07-09)
 --------------------------
 Initial release
