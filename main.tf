@@ -17,6 +17,8 @@ locals {
     var.tags,
     local.local_tags
   )
+
+  cloudwatch_log_group_name = "/aws/ec2/${var.name}"
 }
 
 data "aws_region" "current" {}
@@ -90,6 +92,17 @@ module "kcl_autoscaling" {
   write_max_capacity = var.kcl_write_max_capacity
 }
 
+# --- CloudWatch: Logging
+
+resource "aws_cloudwatch_log_group" "log_group" {
+  count = var.cloudwatch_logs_enabled ? 1 : 0
+
+  name              = local.cloudwatch_log_group_name
+  retention_in_days = var.cloudwatch_logs_retention_days
+
+  tags = local.tags
+}
+
 # --- IAM: Roles & Permissions
 
 resource "aws_iam_role" "iam_role" {
@@ -145,6 +158,17 @@ resource "aws_iam_policy" "iam_policy" {
       ],
       "Resource": [
         "${aws_dynamodb_table.kcl.arn}"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:PutLogEvents",
+        "logs:CreateLogStream",
+        "logs:DescribeLogStreams"
+      ],
+      "Resource": [
+        "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:${local.cloudwatch_log_group_name}:*"
       ]
     }
   ]
@@ -298,6 +322,9 @@ locals {
     schema_name   = var.schema_name
 
     telemetry_script = join("", module.telemetry.*.amazon_linux_2_user_data)
+
+    cloudwatch_logs_enabled   = var.cloudwatch_logs_enabled
+    cloudwatch_log_group_name = local.cloudwatch_log_group_name
   })
 }
 

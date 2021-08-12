@@ -15,6 +15,10 @@ function install_docker_ce() {
   sudo usermod -a -G docker ec2-user
 }
 
+function get_instance_id() {
+  curl --silent --location "http://169.254.169.254/latest/meta-data/instance-id/"
+}
+
 install_docker_ce
 
 sudo mkdir -p $${CONFIG_DIR}
@@ -35,6 +39,11 @@ sudo docker run \
   -d \
   --name create_schema \
   --network host \
+%{ if cloudwatch_logs_enabled ~}
+  --log-driver awslogs \
+  --log-opt awslogs-group=${cloudwatch_log_group_name} \
+  --log-opt awslogs-stream=$(get_instance_id) \
+%{ endif ~}
   -v $${CONFIG_DIR}:/snowplow/config \
   -e 'PGUSER=${db_username}' \
   -e 'PGPASSWORD=${db_password}' \
@@ -47,8 +56,14 @@ sudo docker run \
   --name postgres_loader \
   --restart always \
   --network host \
+%{ if cloudwatch_logs_enabled ~}
+  --log-driver awslogs \
+  --log-opt awslogs-group=${cloudwatch_log_group_name} \
+  --log-opt awslogs-stream=$(get_instance_id) \
+%{ else ~}
   --log-opt max-size=10m \
   --log-opt max-file=5 \
+%{ endif ~}
   -v $${CONFIG_DIR}:/snowplow/config \
   -e 'JAVA_OPTS=-Dorg.slf4j.simpleLogger.defaultLogLevel=info' \
   snowplow/snowplow-postgres-loader:${version} \
